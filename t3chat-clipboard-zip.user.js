@@ -1,0 +1,107 @@
+// ==UserScript==
+// @name         T3 Chat — Clipboard ZIP Button (Markdown Fence Only)
+// @namespace    t3.chat
+// @version      2.0
+// @description  Reads clipboard text with proper ``` markdown code fences (filename.ext + fenced block) and downloads all as a ZIP file
+// @author       you
+// @match        https://t3.chat/*
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js
+// @grant        none
+// @license      MIT
+// ==/UserScript==
+
+(function () {
+  "use strict";
+
+  const BTN_ID = "t3zip-from-clipboard";
+  if (document.getElementById(BTN_ID)) return;
+
+  // ---------- Create the floating button ----------
+  const btn = document.createElement("button");
+  btn.id = BTN_ID;
+  Object.assign(btn.style, {
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    padding: "8px 14px",
+    fontSize: "13px",
+    cursor: "pointer",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+    zIndex: 99999,
+  });
+  btn.textContent = "📋 Build ZIP from Clipboard";
+  document.body.appendChild(btn);
+
+  btn.onclick = async () => {
+    btn.disabled = true;
+    btn.textContent = "⏳ Reading clipboard...";
+    try {
+      let text = "";
+      try {
+        text = await navigator.clipboard.readText();
+      } catch {
+        text = prompt("Paste copied T3 output here:");
+      }
+
+      if (!text.trim()) {
+        alert("Clipboard empty or unreadable.");
+        reset();
+        return;
+      }
+
+      const files = parseFiles(text);
+      if (!files.length) {
+        alert("No markdown code fences (``` … ``` ) with filenames found.");
+        reset();
+        return;
+      }
+
+      const zip = new JSZip();
+      files.forEach((f) => zip.file(f.name, f.content));
+      const blob = await zip.generateAsync({ type: "blob" });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `t3chat-${timestamp()}.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+      btn.textContent = `✅ Saved ${files.length} file${files.length > 1 ? "s" : ""}`;
+      setTimeout(reset, 2000);
+    } catch (e) {
+      console.error(e);
+      alert("Clipboard access failed; try the manual paste prompt.");
+      reset();
+    }
+  };
+
+  // ---------- Helpers ----------
+  function reset() {
+    btn.disabled = false;
+    btn.textContent = "📋 Build ZIP from Clipboard";
+  }
+
+  // Matches lines like "manifest.json" followed by ```language … ```
+  function parseFiles(text) {
+    const regex =
+      /(^|[\r\n])([^\s\n]+?\.[A-Za-z0-9]+)[ \t]*\r?\n```[\w-]*\r?\n([\s\S]*?)```/g;
+    const out = [];
+    let m;
+    while ((m = regex.exec(text))) {
+      out.push({ name: m[2].trim(), content: m[3] });
+    }
+    return out;
+  }
+
+  function timestamp() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(
+      d.getHours()
+    )}-${p(d.getMinutes())}`;
+  }
+})();
