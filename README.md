@@ -1,6 +1,7 @@
 # T3 Chat Clipboard ZIP Button
 
-[![Install Userscript](https://img.shields.io/badge/Install%20Userscript-click%20here-blue?style=for-the-badge)](https://github.com/Microck/t3chat-clipboard-zip/raw/main/t3chat-clipboard-zip.user.js)
+[![Install with TamperMonkey](https://img.shields.io/badge/Install%20with-TamperMonkey-blue.svg?logo=Tampermonkey&logoColor=white)](https://github.com/Microck/t3chat-clipboard-zip/raw/main/t3chat-clipboard-zip.user.js)
+[![Install with ViolentMonkey](https://img.shields.io/badge/Install%20with-ViolentMonkey-orange.svg?logo=Monkeytype&logoColor=white)](https://github.com/Microck/t3chat-clipboard-zip/raw/main/t3chat-clipboard-zip.user.js)
 
 This is a simple ViolentMonkey/TamperMonkey userscript that adds a "Build ZIP from Clipboard" button to t3.chat.  
 When you copy a T3.Chat message that contains multiple code blocks with markdown fences (```), it reads your clipboard, extracts each file, and downloads them together as a .zip archive.
