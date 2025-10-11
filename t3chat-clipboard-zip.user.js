@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         T3 Chat — Clipboard ZIP Button (Markdown Fence Only)
+// @name         T3 Chat — Clipboard ZIP Button
 // @namespace    t3.chat
-// @version      2.0
+// @version      2.1
 // @description  Reads clipboard text with proper ``` markdown code fences (filename.ext + fenced block) and downloads all as a ZIP file
 // @author       you
 // @match        https://t3.chat/*
@@ -70,7 +70,9 @@
       a.click();
       URL.revokeObjectURL(a.href);
 
-      btn.textContent = `✅ Saved ${files.length} file${files.length > 1 ? "s" : ""}`;
+      btn.textContent = `✅ Saved ${files.length} file${
+        files.length > 1 ? "s" : ""
+      }`;
       setTimeout(reset, 2000);
     } catch (e) {
       console.error(e);
@@ -85,14 +87,19 @@
     btn.textContent = "📋 Build ZIP from Clipboard";
   }
 
-  // Matches lines like "manifest.json" followed by ```language … ```
+  // Matches lines like "### 1. filename.ext" or "filename.ext" followed by ```language … ```
   function parseFiles(text) {
+    // Updated regex to handle optional markdown headers (e.g., "### 1. filename.ext")
+    // and blank lines between the filename and the code fence.
     const regex =
-      /(^|[\r\n])([^\s\n]+?\.[A-Za-z0-9]+)[ \t]*\r?\n```[\w-]*\r?\n([\s\S]*?)```/g;
+      /(?:^|\n)\s*(?:###\s*(?:\d+\.\s*)?)?([^\s/\\:"*?<>|]+\.[a-zA-Z0-9]+)\s*```[\w-]*\r?\n([\s\S]*?)```/g;
     const out = [];
     let m;
     while ((m = regex.exec(text))) {
-      out.push({ name: m[2].trim(), content: m[3] });
+      // Capture groups have shifted:
+      // m[1] is now the filename.
+      // m[2] is now the content.
+      out.push({ name: m[1].trim(), content: m[2] });
     }
     return out;
   }
